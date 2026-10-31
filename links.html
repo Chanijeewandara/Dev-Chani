@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Guest Links</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Jost:wght@400;500&display=swap">
+<style>
+/* Private helper for the couple. Not linked from the invitation. */
+:root{--bg:#FFFFFF;--bg-2:#FBF7EE;--ink:#2A2418;--mute:#6B604C;--gold:#B8893A;--gold-lo:#8A6420;--line:rgba(184,137,58,.5);color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg-2);color:var(--ink);font-family:"Cormorant Garamond",Georgia,serif;font-size:1.15rem;line-height:1.5;
+  padding:24px max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:720px;margin:0 auto;display:grid;gap:22px}
+h1{font-style:italic;font-weight:500;font-size:2.2rem;margin:0}
+.note{color:var(--mute);margin:0}
+label{font-family:Jost,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.18em;font-size:.68rem;color:var(--gold-lo)}
+textarea,input{width:100%;font:inherit;font-size:1.05rem;border:1px solid var(--line);border-radius:3px;padding:12px 14px;background:#fff;color:var(--ink);min-width:0}
+textarea{min-height:140px;resize:vertical}
+.field{display:grid;gap:8px}
+.btn{font-family:Jost,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.14em;font-size:.68rem;font-weight:500;padding:10px 16px;border:1px solid var(--gold);border-radius:3px;
+  background:linear-gradient(100deg,#C9A04A,#E3C57A);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-flex}
+.btn.ghost{background:transparent;color:var(--gold-lo)}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+li{background:#fff;border:1px solid var(--line);padding:12px 14px;display:grid;gap:8px}
+li b{font-weight:500;font-size:1.25rem;overflow-wrap:anywhere}
+li code{font-size:.85rem;color:var(--mute);overflow-wrap:anywhere;font-family:ui-monospace,Menlo,monospace}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+:focus-visible{outline:2px solid var(--gold-lo);outline-offset:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Guest links</h1>
+  <p class="note">Type one guest name per line. Each guest gets their own link, and their name shows at the top of the invitation and is filled in on the reply form. Only you use this page.</p>
+  <div class="field">
+    <label for="base">Invitation address</label>
+    <input id="base" type="text" readonly>
+  </div>
+  <div class="field">
+    <label for="names">Guest names (one per line)</label>
+    <textarea id="names" placeholder="Nimal Perera&#10;Kamala &amp; family&#10;Aunty Sheela"></textarea>
+  </div>
+  <div class="row"><button class="btn" id="copyall" type="button">Copy all links</button></div>
+  <ul id="out"></ul>
+</div>
+<script>
+(function(){
+  var base = new URL("index.html", location.href).href;
+  document.getElementById("base").value = base;
+  var names = document.getElementById("names"), out = document.getElementById("out");
+
+  function link(n){ return base + "?to=" + encodeURIComponent(n); }
+  function copy(text, btn){
+    var old = btn.textContent;
+    function ok(t){ btn.textContent = t; setTimeout(function(){ btn.textContent = old; }, 1500); }
+    function fb(){
+      var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select(); var r = false;
+      try { r = document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta); ok(r ? "Copied" : "Copy by hand");
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function(){ ok("Copied"); }, fb); else fb();
+  }
+  function list(){ return names.value.split("\n").map(function(s){ return s.replace(/\s+/g, " ").trim().slice(0, 40); }).filter(Boolean); }
+
+  function render(){
+    out.textContent = "";
+    list().forEach(function(n){
+      var li = document.createElement("li");
+      var b = document.createElement("b"); b.textContent = n;
+      var c = document.createElement("code"); c.textContent = link(n);
+      var row = document.createElement("div"); row.className = "row";
+      var cb = document.createElement("button"); cb.type = "button"; cb.className = "btn"; cb.textContent = "Copy link";
+      cb.addEventListener("click", function(){ copy(link(n), cb); });
+      var wa = document.createElement("a"); wa.className = "btn ghost"; wa.target = "_blank"; wa.rel = "noopener noreferrer"; wa.textContent = "Send on WhatsApp";
+      wa.href = "https://wa.me/?text=" + encodeURIComponent("Dear " + n + ", Chani & Dev warmly invite you to their wedding on 10 December 2026 at Golden Reech Hotel. Your invitation: " + link(n));
+      row.appendChild(cb); row.appendChild(wa);
+      li.appendChild(b); li.appendChild(c); li.appendChild(row);
+      out.appendChild(li);
+    });
+  }
+  names.addEventListener("input", render);
+  document.getElementById("copyall").addEventListener("click", function(){
+    copy(list().map(function(n){ return n + "\n" + link(n); }).join("\n\n"), this);
+  });
+})();
+</script>
+</body>
+</html>
